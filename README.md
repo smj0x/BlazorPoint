@@ -70,7 +70,7 @@ Making your default.aspx as welcome page.
 Navigate to `Site Settings -> Welcome Page` in your site collection, if you don't see this option enable 
 site collection feature `SharePoint Server Publishing Infrastructure`
 
-##Contributors
+## Contributors
 
 - Syed Mohammed Jafary <syedmohmad@gmail.com>
 [S.M.J Ltd](https://www.smj.ltd)
