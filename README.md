@@ -13,6 +13,7 @@ Steps to get up and running, you will need [https://dot.net](dot net core 3.0)
 Create your project using this below command
 
 `dotnet new blazorwasm -o [YourProjectName]`
+then,
 `cd [YourProjectName]/wwwroot`
 
 Now, rename your _index.html_  file to any file name with _.aspx_
