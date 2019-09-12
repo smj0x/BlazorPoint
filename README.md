@@ -70,6 +70,8 @@ Making your default.aspx as welcome page.
 Navigate to `Site Settings -> Welcome Page` in your site collection, if you don't see this option enable 
 site collection feature `SharePoint Server Publishing Infrastructure`
 
+Then enable `SharePoint Server Publishing` in site feature
+
 ## Contributors
 
 - Syed Mohammed Jafary <syedmohmad@gmail.com>
