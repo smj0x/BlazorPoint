@@ -72,6 +72,10 @@ site collection feature `SharePoint Server Publishing Infrastructure`
 
 Then enable `SharePoint Server Publishing` in site feature
 
+## Demo
+
+![BlazorPoint](demo.gif)
+
 ## Contributors
 
 - Syed Mohammed Jafary <syedmohmad@gmail.com>
