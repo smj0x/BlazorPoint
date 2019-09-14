@@ -1,0 +1,83 @@
+﻿@using lms.Models;
+@using Newtonsoft.Json;
+@using System.Net.Http;
+
+<div class="top-row pl-4 navbar navbar-dark">
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+<div class="col text-center">
+    <img src="img/logo.png" alt="logo">
+</div>
+<br />
+<br />
+<div class="col text-center">
+    <p class="h5" style="color:white">License Management System</p>
+</div>
+<div class="userInfo">
+    <div class="userAvatar">
+        <img src="img/user.png">
+    </div>
+    <div class="username">
+        <h3>@username</h3>
+    </div>
+</div>
+<br />
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <img src="img/sideMenu04.png"> &nbsp; Home
+            </NavLink>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="default.aspx/licenses">
+                <img src="img/sideMenu02.png"> &nbsp; Licenses
+            </NavLink>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="default.aspx/tasks/Not Started">
+                <img src="img/sideMenu01.png"> &nbsp; Tasks
+            </NavLink>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="../SitePages/Home.aspx" target="_blank">
+                <img src="img/sideMenu03.png"> &nbsp; Admin Portal
+            </NavLink>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="../_layouts/closeConnection.aspx?loginasanotheruser=true">
+                <img src="img/logout.png"> &nbsp; Logout
+            </NavLink>
+        </li>
+    </ul>
+</div>
+
+@code {
+    bool collapseNavMenu = true;
+    string username = "";
+
+    string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        HttpClient Http = new HttpClient();
+        Root root = new Root();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        string temp = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/currentuser");
+        root = JsonConvert.DeserializeObject<Root>(temp);
+        //Setting Global Variables
+        Settings.Id = root.Id;
+        Settings.LoginName = root.LoginName;
+        Settings.Title = root.Title;
+        username = root.Title;
+        StateHasChanged();
+    }
+}

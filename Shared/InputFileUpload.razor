@@ -1,0 +1,11 @@
+﻿<div class="custom-file">
+    <input type="file" class="custom-file-input" id="@Name" multiple="@Multiple">
+    <label class="custom-file-label" for="@Name">Choose file</label>
+</div>
+
+@code {
+    [Parameter]
+    public string Name { get; set; }
+    [Parameter]
+    public string Multiple { get; set; }
+}

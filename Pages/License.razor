@@ -1,0 +1,150 @@
+﻿@page "/default.aspx/license"
+@page "/default.aspx/license/{Id:int}"
+@using Newtonsoft.Json;
+@using lms.Models;
+
+@if (license != null)
+{
+    <h3 class="heading">License #@license.Title</h3>
+    <fieldset class="fieldset">
+        <legend>License Information</legend>
+        <div class="form-row">
+            <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                <label>System Name</label>
+                <input class="form-control" value="@license.SystemName" readonly/>
+            </div>
+            <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                <label>License Name</label>
+                <input class="form-control" value="@license.LicenseName" readonly/>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-lg-8 col-md-8 col-sm-12">
+                <label>Description</label>
+                <textarea class="form-control" readonly>@license.Description</textarea>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-lg-8 col-md-8 col-sm-12">
+                <label>License Key</label>
+                <input class="form-control" value="@license.LicenseKey" readonly/>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                <label>Contract Number</label>
+                <input class="form-control" value="@license.ContractNumber" readonly/>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-lg-3 col-md-3 col-sm-12">
+                <label>Start Date</label>
+                <input class="form-control" value="@license.StartDate.ToShortDateString()" readonly/>
+            </div>
+            <div class="form-group col-lg-3 col-md-3 col-sm-12">
+                <label>End Date</label>
+                <input class="form-control" value="@license.EndDate.ToShortDateString()" readonly/>
+            </div>
+            <div class="form-group col-lg-3 col-md-3 col-sm-12">
+                <label>Issued Date</label>
+                <input class="form-control" value="@license.IssuedDate.ToShortDateString()" readonly/>
+            </div>
+            <div class="form-group col-lg-3 col-md-3 col-sm-12">
+                <label>Planned Renewal Date</label>
+                <input class="form-control" value="@license.PlannedRenewal.ToShortDateString()" readonly/>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-lg-3 col-md-3 col-sm-12">
+                <label>Quantity</label>
+                <input class="form-control" value="@license.Quantity" readonly/>
+            </div>
+            <div class="form-group col-lg-3 col-md-3 col-sm-12">
+                <label>Utilized</label>
+                <input class="form-control" value="@license.Utilized" readonly/>
+            </div>
+            <div class="form-group col-lg-3 col-md-3 col-sm-12">
+                <label>Cost</label>
+                <input class="form-control" value="@license.Cost" readonly/>
+            </div>
+            <div class="form-group col-lg-3 col-md-3 col-sm-12">
+                <label>Type Of Cost</label>
+                <input class="form-control" value="@license.TypeOfCost" readonly/>
+            </div>
+        </div>
+        <fieldset class="fieldset">
+            <legend>Owner Information</legend>
+            <div class="form-row">
+                <div class="form-group col-lg-4 col-md-4 col-sm-12">
+                    <label>Name</label>
+                    <input class="form-control" value="@license.Owner.Title" readonly />
+                </div>
+                @*<div class="form-group col-lg-4 col-md-4 col-sm-12">
+                    <label>Email</label>
+                    <input class="form-control" value="@license.Owner.EMail" readonly />
+                </div>
+                <div class="form-group col-lg-4 col-md-4 col-sm-12">
+                    <label>Work Phone</label>
+                    <input class="form-control nofont" value="@license.Owner.WorkPhone" readonly />
+                </div>*@
+            </div>
+            @*<div class="form-row">
+                <div class="form-group col-lg-4 col-md-4 col-sm-12">
+                    <label>Employee Number</label>
+                    <input class="form-control nofont" value="SEC\@license.Owner.UserName" readonly />
+                </div>
+                <div class="form-group col-lg-4 col-md-4 col-sm-12">
+                    <label>Department</label>
+                    <input class="form-control" value="@license.Owner.Department" readonly />
+                </div>
+                <div class="form-group col-lg-4 col-md-4 col-sm-12">
+                    <label>Office</label>
+                    <input class="form-control" value="@license.Owner.Office" readonly />
+                </div>
+            </div>*@
+        </fieldset>
+        @if (license.Attachments)
+        {
+            <fieldset class="fieldset noprint" id="attachments">
+                <legend>Attachments</legend>
+                <table id="allAttachments">
+                    <tbody>
+                        @foreach (AttachmentFiles itemFile in license.AttachmentFiles)
+                        {
+                            <tr><td><a class="btn btn-link" href="@(Navigator.BaseUri+Settings.AttachmentURL+itemFile.ServerRelativeUrl)" target="_blank">@itemFile.FileName</a></td></tr>
+                        }
+                    </tbody>
+                </table>
+            </fieldset>
+        }
+    </fieldset>
+}
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private Value license = new Value();
+    private Owner owner = new Owner();
+    private AttachmentFiles file = new AttachmentFiles();
+    private List<AttachmentFiles> files = new List<AttachmentFiles>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetListItemAsync();
+    }
+
+    private async Task GetListItemAsync()
+    {
+        string response = string.Empty;
+        license.AttachmentFiles = files;
+        license.Owner = owner;
+        HttpClient Http = new HttpClient();
+        string uid = Settings.Id.ToString();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        //response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" + Settings.LicensesListGuid + "')/items('" + Id + "')?$select=*,AttachmentFiles/ServerRelativeUrl,AttachmentFiles/FileName,Owner/Title,Owner/UserName,Owner/EMail,Owner/Department,Owner/WorkPhone,Owner/Office&$expand=AttachmentFiles,Owner");
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" + Settings.LicensesListGuid + "')/items('" + Id + "')?$select=*,AttachmentFiles/ServerRelativeUrl,AttachmentFiles/FileName,Owner/Title&$expand=AttachmentFiles,Owner");
+        license = JsonConvert.DeserializeObject<Value>(response);
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,22 @@
+﻿@page "/default.aspx/licenses"
+@page "/default.aspx/licenses/{filter}"
+
+<p class="heading">Licenses</p>
+
+<div class="col-lg-6">
+    <label>Filter</label>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <NavLink class="breadcrumb-item" href="default.aspx/licenses/">My</NavLink>
+            <NavLink class="breadcrumb-item" href="default.aspx/licenses/Department">Department</NavLink>
+        </ol>
+    </nav>
+</div>
+<br />
+
+<MyReports filter="@Filter"></MyReports>
+
+@code {
+     [Parameter]
+    public string Filter { get; set; } = "Not Started";
+}

@@ -1,0 +1,92 @@
+﻿@using Microsoft.JSInterop;
+@using Newtonsoft.Json;
+@using Models;
+@inject IJSRuntime jsRun
+
+<div class="col-lg-12">
+    <table id="MyReportsTable" class="table dataTable table-striped table-bordered" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>LID</th>
+                <th>System Name</th>
+                <th>License Name</th>
+                <th>Start Date</th>
+                <th>Expiry Date</th>
+                <th>Issued Date</th>
+                <th>Quantity</th>
+                <th>Utilized</th>
+                <th>Cost</th>
+                <th>Total Cost</th>
+                <th>Cost Type</th>
+                <th>Planned Renewal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (values != null)
+            {
+                foreach (var report in values)
+                {
+                    <tr>
+                        <td>@report.Id</td>
+                        <td><a class="nofont" href="@(Navigator.BaseUri)default.aspx/license/@report.Id">@report.Title</a></td>
+                        <td>@report.SystemName</td>
+                        <td>@report.LicenseName</td>
+                        <td>@report.StartDate.ToString("dd/MM/yyyy")</td>
+                        <td>@report.EndDate.ToString("dd/MM/yyyy")</td>
+                        <td>@report.IssuedDate.ToString("dd/MM/yyyy")</td>
+                        <td>@report.Quantity</td>
+                        <td>@report.Utilized</td>
+                        <td>@report.Cost</td>
+                        <td>@report.TotalCost</td>
+                        <td>@report.TypeOfCost</td>
+                        <td>@report.PlannedRenewal.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+    <br />
+</div>
+@code {
+    [Parameter]
+    public string filter { get; set; } = "Not Started";
+    private Root root = new Root();
+    private List<Value> values = new List<Value>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        bool x = await jsRun.InvokeAsync<bool>("dataTableDestroy1");
+        root = null;
+        await GetMyReportsAsync(filter);
+        bool y = await jsRun.InvokeAsync<bool>("dataTableCreate1");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        bool x = await jsRun.InvokeAsync<bool>("dataTableDestroy1");
+        root = null;
+        await GetMyReportsAsync(filter);
+        bool y = await jsRun.InvokeAsync<bool>("dataTableCreate1");
+    }
+
+    private async Task GetMyReportsAsync(string status)
+    {
+        string response = string.Empty;
+        HttpClient Http = new HttpClient();
+        string uid = Settings.Id.ToString();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        response = await Http.GetStringAsync(Navigator.BaseUri+Settings.BaseURL + "_api/web/lists(guid'" + Settings.LicensesListGuid + "')/items?$select=*,Owner/Title&$expand=Owner&$filter=&$orderby=ID desc");
+        root = JsonConvert.DeserializeObject<Root>(response);
+        values = root.value;
+        StateHasChanged();
+    }
+
+    public async Task OnReload()
+    {
+        bool x = await jsRun.InvokeAsync<bool>("dataTableDestroy1");
+        root = null;
+        await GetMyReportsAsync(filter);
+        bool y = await jsRun.InvokeAsync<bool>("dataTableCreate1");
+    }
+}

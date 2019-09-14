@@ -1,0 +1,25 @@
+﻿@page "/default.aspx/tasks"
+@page "/default.aspx/tasks/{filter}"
+
+<p class="heading">My Tasks</p>
+
+<div class="col-lg-6">
+    <label>Task Status</label>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <NavLink class="breadcrumb-item" href="default.aspx/tasks/Not Started">Not Started</NavLink>
+            <NavLink class="breadcrumb-item" href="default.aspx/tasks/Completed">Completed</NavLink>
+            <NavLink class="breadcrumb-item" href="default.aspx/tasks/In Progress">In Progress</NavLink>
+            <NavLink class="breadcrumb-item" href="default.aspx/tasks/Deferred">Deferred</NavLink>
+            <NavLink class="breadcrumb-item" href="default.aspx/tasks/Pending">Pending</NavLink>
+        </ol>
+    </nav>
+</div>
+<br />
+
+<MyTasks filter="@Filter"></MyTasks>
+
+@code {
+    [Parameter]
+    public string Filter { get; set; } = "Not Started";
+}
