@@ -1,7 +1,8 @@
 # Blazor for SharePoint
-Blazor (Client Side) on SharePoint
+BlazorPoint is Blazor(Client Side) on SharePoint
 
 This is a sample project to help you get started with hosting blazor on SharePoint Pages, Completely Client Side.
+This Project is an experimental project, still missng authorizations and other cool stuff which will be added later on.
 
 This Project Contains Components such as:
 - Insert data into lists using forms
