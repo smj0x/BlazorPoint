@@ -1,6 +1,6 @@
 ﻿// Get IE or Edge browser version
 var version = detectIE();
-var message = "Please use \"Google Chrome\"";
+var message = "Please use \"Google Chrome\" or \"Firefox\"";
 if (version === false) {
     //alert(message);
 } else if (version >= 12) {

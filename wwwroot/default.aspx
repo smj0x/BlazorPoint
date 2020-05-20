@@ -1,6 +1,5 @@
 ﻿<!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
@@ -15,14 +14,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="96x96" href="img/favicon-96x96.png">
 </head>
-
 <body onafterprint="onPrintFinished()">
     <app><div class="sec-pre-loader"></div></app>
-    <!--<div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
-    </div>-->
     <script src="js/ie.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="js/jquery-3.4.1.min.js"></script>
@@ -33,5 +26,4 @@
     <script src="js/dataTables.responsive.min.js"></script>
     <script src="js/responsive.bootstrap4.min.js"></script>
 </body>
-
 </html>

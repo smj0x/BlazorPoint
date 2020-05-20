@@ -75,6 +75,12 @@ Then enable `SharePoint Server Publishing` in site feature
 
 ## Demo
 
+Demo Project: Datacenter Visitor Log.
+
+1) Import List Template in ListTemplate Folder
+2) Change List Guid & List Type in Contants/Settings.cs File
+3) Create SharePoint Groups Named As (Admins,DC-OP-Jeddah,DC-OP-Dammam,DC-OP-Riyadh)
+
 ![BlazorPoint](demo.gif)
 
 ## Contributors
