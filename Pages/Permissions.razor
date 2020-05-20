@@ -1,0 +1,221 @@
+﻿@page "/default.aspx/permissions"
+@using Models;
+@using Workers;
+@using Newtonsoft.Json;
+@using System.Net;
+@using System.Net.Http;
+@using System.Net.Http.Headers;
+
+<p class="heading">Permissions</p>
+<fieldset class="fieldset">
+    <legend>Permission Details</legend>
+    <div class="form-row">
+        <div class="form-group col-lg-6 col-md-6 col-sm-12">
+            <label>Groups <code>*</code></label>
+            <select class="custom-select" @onchange="@OnRolesSelectedAsync">
+                <option value="" selected>Please select a value</option>
+                <option value="Admins">Administrators</option>
+                <option value="DC-OP-Riyadh">Datacenter Operator - Riyadh</option>
+                <option value="DC-OP-Dammam">Datacenter Operator - Dammam</option>
+                <option value="DC-OP-Jeddah">Datacenter Operator - Jeddah</option> 
+            </select>
+        </div>
+    </div>
+    @if (groupInfo != null)
+    {
+        <fieldset class="fieldset">
+            <legend>Group Information</legend>
+            <div class="form-row">
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <dl class="listData">
+                        <dt>Group Name</dt>
+                        <dd><p class="text-primary">@groupInfo.LoginName</p></dd>
+                    </dl>
+                    <dl class="listData">
+                        <dt>Group Owner</dt>
+                        <dd><p class="text-primary">@groupInfo.OwnerTitle</p></dd>
+                    </dl>
+                    <dl class="listData">
+                        <dt>Group Description</dt>
+                        <dd><p class="text-primary">@groupInfo.Description</p></dd>
+                    </dl>
+                </div>
+            </div>
+        </fieldset>
+    }
+    @if (groupMemebers != null)
+    {
+        <fieldset class="fieldset">
+            <legend>Group Members</legend>
+            <div class="form-row">
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                    <table id="table" class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Members</th>
+                                <th scope="col">Employee Number</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            @if (groupMemebers.Count != 0)
+                            {
+                                @foreach (var item in groupMemebers)
+                                {
+                                    <tr>
+                                        <td>@item.Title</td>
+                                        <td>@item.LoginName.Split('|')[1]</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </fieldset>
+    }
+    <fieldset class="fieldset">
+        <legend>Add or Remove Members</legend>
+        @if (success == 1)
+        {
+            <AlertBar PrimaryMessage="Employee Added" Type="success"></AlertBar>
+        }
+        else if (success == 2)
+        {
+            <AlertBar PrimaryMessage="Employee Failed to Add" Type="danger"></AlertBar>
+        }
+        <div class="form-group col-lg-4 col-md-4 col-sm-12">
+            <PeoplePicker Label="Employee No" @ref="peoplePicker" />
+        </div>
+        <div class="row-fluid">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <button type="button" @onclick="AddEmployeeAsync" class="btn btn-outline-primary">Add</button>
+                <button type="button" @onclick="RemoveEmployeeAsync" class="btn btn-outline-danger">Remove</button>
+            </div>
+        </div>
+    </fieldset>
+</fieldset>
+
+@code {
+    private Root rootGroupInfo = new Root();
+    private Root rootGroupMemebers = new Root();
+    private List<Value> groupMemebers = new List<Value>();
+    private Value groupInfo = new Value();
+    private PeoplePicker peoplePicker = new PeoplePicker();
+    private int groupID;
+    private int success;
+
+    private string selectedGroupName = string.Empty;
+
+    private async Task OnRolesSelectedAsync(ChangeEventArgs roleEvent)
+    {
+        selectedGroupName = roleEvent.Value.ToString();
+        await LoadGroupInfoAsync(selectedGroupName).ConfigureAwait(false);
+    }
+
+    private async Task LoadGroupInfoAsync(string loginName)
+    {
+        string response = string.Empty;
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/sitegroups?$filter=LoginName eq '" + loginName + "'");
+        rootGroupInfo = JsonConvert.DeserializeObject<Root>(response);
+        groupInfo = rootGroupInfo.value[0];
+        if (groupInfo != null)
+        {
+            groupID = groupInfo.Id;
+            await LoadGroupMembersAsync(groupInfo.Id);
+        }
+        StateHasChanged();
+    }
+
+    private async Task LoadGroupMembersAsync(int Gid)
+    {
+        string response = string.Empty;
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/sitegroups/GetById('" + Gid + "')/Users");
+        rootGroupMemebers = JsonConvert.DeserializeObject<Root>(response);
+        groupMemebers = rootGroupMemebers.value;
+    }
+
+
+    private async Task AddEmployeeAsync()
+    {
+        HttpClient Http = new HttpClient();
+        string data = @"<?xml version=""1.0"" encoding=""utf-8""?>" +
+            @"<soap12:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:soap12=""http://www.w3.org/2003/05/soap-envelope"">" +
+            "<soap12:Header></soap12:Header>" +
+            "<soap12:Body>" +
+            @"<AddUserToGroup xmlns=""http://schemas.microsoft.com/sharepoint/soap/directory/"">" +
+            "<groupName>" + groupInfo.LoginName + "</groupName>" +
+            "<userLoginName>" + peoplePicker.loginName + "</userLoginName>" +
+            "</AddUserToGroup>" +
+            "</soap12:Body>" +
+            "</soap12:Envelope>";
+        StringContent queryString = new StringContent(data);
+        queryString.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml");
+        var response = await Http.PostAsync(Navigator.BaseUri + Settings.BaseURL + "_vti_bin/usergroup.asmx", queryString);
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            success = 1;
+            await LoadGroupInfoAsync(selectedGroupName).ConfigureAwait(false);
+        }
+        else
+        {
+            success = 2;
+        }
+        StateHasChanged();
+    }
+
+    private async Task RemoveEmployeeAsync()
+    {
+        HttpClient Http = new HttpClient();
+        string data = @"<?xml version=""1.0"" encoding=""utf-8""?>" +
+            @"<soap12:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:soap12=""http://www.w3.org/2003/05/soap-envelope"">" +
+            "<soap12:Header></soap12:Header>" +
+            "<soap12:Body>" +
+            @"<RemoveUserFromGroup  xmlns=""http://schemas.microsoft.com/sharepoint/soap/directory/"">" +
+            "<groupName>" + groupInfo.LoginName + "</groupName>" +
+            "<userLoginName>" + peoplePicker.loginName + "</userLoginName>" +
+            "</RemoveUserFromGroup>" +
+            "</soap12:Body>" +
+            "</soap12:Envelope>";
+        StringContent queryString = new StringContent(data);
+        queryString.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml");
+        var response = await Http.PostAsync(Navigator.BaseUri + Settings.BaseURL + "_vti_bin/usergroup.asmx", queryString);
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            success = 1;
+            await LoadGroupInfoAsync(selectedGroupName).ConfigureAwait(false);
+        }
+        else
+        {
+            success = 2;
+        }
+        StateHasChanged();
+    }
+
+    private async Task<bool> AuthorizedAsync(string assignTo)
+    {
+        var groups = await SPTools.GetMyGroupsAsync(Navigator.BaseUri);
+        if (groups != null)
+        {
+            foreach (Group group in groups)
+            {
+                if (group.LoginName.Equals(assignTo))
+                {
+                    //authorized
+                    return true;
+                }
+            }
+            //unauthorized
+            return false;
+        }
+        else
+        {
+            //unauthorized
+            return false;
+        }
+    }
+}

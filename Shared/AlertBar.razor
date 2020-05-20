@@ -1,0 +1,15 @@
+﻿<div class="alert alert-success alert-@Type fade show" role="alert">
+    <strong>@PrimaryMessage</strong>, @SecondaryMessage.
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public string PrimaryMessage { get; set; }
+    [Parameter]
+    public string SecondaryMessage { get; set; }
+    [Parameter]
+    public string Type { get; set; }
+}

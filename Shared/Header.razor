@@ -1,0 +1,19 @@
+﻿<div class="jumbotron print_only">
+    <div class="row container-fluid">
+        <div class="col-sm my-auto">
+            <img src="img/logo_color.png" />
+        </div>
+        <div class="col-sm text-right my-auto">
+            <p class="heading1">@Settings.AppName</p>
+            <p class="lead">@SubHeading</p>
+            <p class="text-muted">@Parameter</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string SubHeading { get; set; }
+    [Parameter]
+    public string Parameter { get; set; }
+}

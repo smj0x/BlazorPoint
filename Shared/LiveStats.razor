@@ -1,0 +1,88 @@
+﻿@using Microsoft.JSInterop;
+@using Newtonsoft.Json;
+@using Models;
+@using Workers;
+@using System.Net;
+@using System.Net.Http;
+@using System.Net.Http.Headers;
+@using System.Threading;
+
+<div class="row">
+    <div class="card bg-light mb-3" style="max-width: 18rem;">
+        <div class="card-header">
+            Riyadh Datacenter
+            <div class="spinner-grow spinner-grow-sm text-danger text-right" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Total Checked-In: <code>@Ryd</code></h5>
+        </div>
+    </div>
+
+    <div class="card bg-light mb-3" style="max-width: 18rem;">
+        <div class="card-header">
+            Dammam Datacenter
+            <div class="spinner-grow spinner-grow-sm text-danger text-right" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Total Checked-In: <code>@Dmm</code></h5>
+        </div>
+    </div>
+
+    <div class="card bg-light mb-3" style="max-width: 18rem;">
+        <div class="card-header">
+            Jeddah Datacenter
+            <div class="spinner-grow spinner-grow-sm text-danger text-right" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Total Checked-In: <code>@Jed</code></h5>
+        </div>
+    </div>
+</div>
+@code {
+    private Root root = new Root();
+    private int count = 1;
+    private int Jed,Dmm,Ryd;
+   
+    protected override async Task OnInitializedAsync()
+    {
+        var timer = new Timer(new TimerCallback(_ =>
+        {
+            if (count <= 0) return;
+            count++;
+
+            // Note that the following line is necessary because otherwise
+            // Blazor would not recognize the state change and not refresh the UI
+            GetCheckedInAsync("Jeddah").ConfigureAwait(false);
+            GetCheckedInAsync("Riyadh").ConfigureAwait(false);
+            GetCheckedInAsync("Dammam").ConfigureAwait(false);
+            StateHasChanged();
+        }), null, 5000, 5000);
+        await Task.FromResult(0);
+    }
+
+    private async Task GetCheckedInAsync(string _filter)
+    {
+        string response = string.Empty;
+        string url = string.Empty;
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        if (_filter != null)
+            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=1000&$filter= Datacenter eq '" + _filter + "' and Status eq 'Checked-In'";
+        else
+            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=1000&$filter= Status eq 'Checked-In'";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+        root = JsonConvert.DeserializeObject<Root>(response);
+        if(_filter == "Jeddah")
+            Jed = root.value.Count;
+        if(_filter == "Riyadh")
+            Ryd = root.value.Count;
+        if(_filter == "Dammam")
+         Dmm = root.value.Count;
+    }
+}

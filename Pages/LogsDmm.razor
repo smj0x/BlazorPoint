@@ -1,0 +1,88 @@
+﻿@page "/default.aspx/dmm/logs"
+@using Workers;
+@using Models;
+@using Validations;
+
+@if (authorized)
+{
+    <p class="heading">Logs (Dammam)</p>
+    <fieldset class="fieldset">
+        <legend>Filter</legend>
+        <EditForm Model="@_Filter" class="form-inline" OnValidSubmit="@(() =>  SetFilter(false))">
+            <br />
+            <DataAnnotationsValidator />
+            <div class="form-group mb-2">
+                <label>From<code>*</code>: </label>
+                <InputDate class="form-control" @bind-Value="_Filter.From" />
+                <ValidationMessage For="@(() => _Filter.From)" />
+            </div>
+            <br />
+            <div class="form-group mx-sm-3 mb-2">
+                <label>To<code>*</code>: </label>
+                <InputDate class="form-control" @bind-Value="_Filter.To" />
+                <ValidationMessage For="@(() => _Filter.To)" />
+            </div>
+            <br />
+            <button class="btn btn-light mb-2" type="submit"><img src="img/filter.svg" height="24" width="24" /></button>
+            <br />
+            <button class="btn btn-light mb-2" type="button" @onclick="@(() =>  SetFilter(true))"><img src="img/excel.svg" height="24" width="24" /></button>
+        </EditForm>
+    </fieldset>
+    <br />
+
+    <MyLogs Filter="@Filter" Datacenter="Dammam"></MyLogs>
+}
+else
+{
+    <NotAutorized></NotAutorized>
+}
+
+
+@code {
+    public Filter _Filter = new Filter();
+    public Filter Filter;
+    private bool authorized = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await AuthorizedAsync(Settings.DmmOpGroup))
+            authorized = false;
+        else
+            authorized = true;
+        StateHasChanged();
+    }
+
+    private void SetFilter(bool excel)
+    {
+        Filter = new Filter()
+        {
+            To = _Filter.To,
+            From = _Filter.From,
+            Datacenter = "Dammam",
+            ExportExcel = excel
+        };
+    }
+
+    private async Task<bool> AuthorizedAsync(string assignTo)
+    {
+        var groups = await SPTools.GetMyGroupsAsync(Navigator.BaseUri);
+        if (groups != null)
+        {
+            foreach (Group group in groups)
+            {
+                if (group.LoginName.Equals(assignTo))
+                {
+                    //authorized
+                    return true;
+                }
+            }
+            //unauthorized
+            return false;
+        }
+        else
+        {
+            //unauthorized
+            return false;
+        }
+    }
+}

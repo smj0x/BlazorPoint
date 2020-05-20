@@ -1,0 +1,433 @@
+﻿@page "/default.aspx/dmm/check-in"
+@using Validations;
+@using Workers;
+@using Models;
+@using Newtonsoft.Json;
+@using System.Net.Http;
+@using System.Net;
+@using System.Net.Http.Headers;
+@inject IJSRuntime jsRun
+
+
+@if (authorized)
+{
+    <p class="heading">Check-In Form</p>
+    @if (success == 1)
+    {
+        <AlertBar PrimaryMessage="Checked-In Successfully" SecondaryMessage="Use Check-Out to Check-Out visitor" Type="success"></AlertBar>
+    }
+    else if (success == 2)
+    {
+        <AlertBar PrimaryMessage="Failed To Checked-In" SecondaryMessage="Please try again" Type="danger"></AlertBar>
+    }
+
+    <fieldset class="fieldset">
+        <legend>Check-In Type</legend>
+        <div class="form-row">
+            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                <label class="btn btn-secondary active" @onclick="() => SwitchEmpType(true)">
+                    <input type="radio" name="emp" id="option1" autocomplete="off" checked> Employee
+                </label>
+                <label class="btn btn-secondary" @onclick="() => SwitchEmpType(false)">
+                    <input type="radio" name="non-emp" id="option2" autocomplete="off"> Non-Employee
+                </label>
+            </div>
+        </div>
+    </fieldset>
+    @if (employee)
+    {
+        <fieldset class="fieldset">
+            <legend>Check-In Details</legend>
+            <EditForm Model="@formVald" OnValidSubmit="@(async () => await PreCheckAsync())">
+                <DataAnnotationsValidator />
+                <div class="form-row">
+                    <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                        <PeoplePicker Label="Employee Number" @ref="peoplePicker" />
+                        <p class="text-danger">@validMsgCustom</p>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                        <label>Purpose of Visit <code>*</code></label>
+                        <InputTextArea class="form-control" @bind-Value="@formVald.PoV" />
+                        <ValidationMessage For="@(() => formVald.PoV)" />
+                    </div>
+                </div>
+                <button class="button blue" type="submit">Check-In</button>
+            </EditForm>
+        </fieldset>
+    }
+    else
+    {
+        <fieldset class="fieldset">
+            <legend>Check-In Details</legend>
+            <EditForm Model="@form1Vald" OnValidSubmit="@(async () => await PreCheckAsync())">
+                <DataAnnotationsValidator />
+                <div class="form-row">
+                    <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                        <label>Name <code>*</code></label>
+                        <InputText class="form-control" @bind-Value="form1Vald.FullName" />
+                        <ValidationMessage For="@(() => form1Vald.FullName)" />
+                    </div>
+                </div>
+                <label>National ID <code>*</code></label>
+                <div class="form-row">
+                    <div class="form-group col-lg-6 col-md-6 col-sm-12 input-group">
+                        <InputText class="form-control" placeholder="National ID or Iqama Number" aria-label="Recipient's username" aria-describedby="button-addon-nid" @bind-Value="form1Vald.NationalID" />
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" id="button-addon-nid" @onclick="AutoFillAsync" data-toggle="tooltip" data-placement="bottom" title="(Optional) Find's previously Checked-In data.">🔍</button>
+                            <button class="btn btn-outline-secondary" type="button" id="button-addon-nid1" @onclick="ClearAutoFill">❌</button>
+                        </div>
+                    </div>
+                </div>
+                <ValidationMessage For="@(() => form1Vald.NationalID)" />
+                <div class="form-row">
+                    <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                        <label>Contact Number <code>*</code></label>
+                        <InputText class="form-control" @bind-Value="form1Vald.ContactNumber" />
+                        <ValidationMessage For="@(() => form1Vald.ContactNumber)" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                        <label>Work Email</label>
+                        <InputText class="form-control" @bind-Value="form1Vald.WorkEmail" />
+                        <ValidationMessage For="@(() => form1Vald.WorkEmail)" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                        <label>Company <code>*</code></label>
+                        <InputText class="form-control" @bind-Value="form1Vald.Company" />
+                        <ValidationMessage For="@(() => form1Vald.Company)" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                        <label>Purpose of Visit <code>*</code></label>
+                        <InputTextArea class="form-control" @bind-Value="@form1Vald.PoV" />
+                        <ValidationMessage For="@(() => form1Vald.PoV)" />
+                    </div>
+                </div>
+
+                <fieldset class="fieldset">
+                    <legend>Attachments</legend>
+                    @if (fileName != null)
+                    {
+                        <div class="form-group col-lg-4 col-md-4 col-sm-12">
+                            <label>Use previous Attachment</label>
+                            <NavLink class="nav-link" href="@form1Vald.AttachmentURL" target="_blank">
+                                <img src="img/attached.svg" height="24" width="24"> &nbsp; @fileName
+                            </NavLink>
+                        </div>
+                        <div class="form-group col-lg-4 col-md-4 col-sm-12">
+                            <label>[Or]</label>
+                        </div>
+                    }
+                    <div class="form-group col-lg-4 col-md-4 col-sm-12">
+                        <label>Please select a file</label>
+                        <div class="input-group">
+                            <div class="custom-file">
+                                <input type="file" class="form-control-file" id="file_attachments" />
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+                <button class="button blue" type="submit">Check-In</button>
+            </EditForm>
+        </fieldset>
+    }
+    <Popup Message="@Message" Title="Already Checked-In!"></Popup>
+}
+else
+{
+    <NotAutorized></NotAutorized>
+}
+
+@code {
+    private CheckInEmployee formVald = new CheckInEmployee();
+    private CheckInNonEmployee form1Vald = new CheckInNonEmployee();
+    private PeoplePicker peoplePicker = new PeoplePicker();
+    private string validMsgCustom = string.Empty;
+    private Root root { get; set; }
+    private int success;
+    private bool employee = true;
+    private string Message = String.Empty;
+    private bool authorized = true;
+    private string fileName;
+
+    private void SwitchEmpType(bool type)
+    {
+        employee = type;
+        Message = String.Empty;
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await AuthorizedAsync(Settings.DmmOpGroup))
+            authorized = false;
+        else
+            authorized = true;
+        StateHasChanged();
+    }
+
+    private async Task PreCheckAsync()
+    {
+        if (employee)
+        {
+            if (await AlreadyCheckedInEmpAsync(peoplePicker.empId))
+            {
+                //Already checked In message
+                Message = "Provided Employee with same Employee Number is Already Checked In";
+                await LauncPopupAsync();
+            }
+            else
+            {
+                validMsgCustom = string.Empty;
+                if (peoplePicker.empId > 0)
+                {
+                    await SubmitAsync();
+                }
+                else
+                {
+                    validMsgCustom = "Please Enter Employee Number";
+                    peoplePicker.CalculateValidation();
+                }
+            }
+        }
+        else
+        {
+            if (await AlreadyCheckedInNonEmpAsync(form1Vald.NationalID))
+            {
+                //Already checked In message
+                Message = "Provided Visitor with same National ID is Already Checked In";
+                await LauncPopupAsync();
+            }
+            else
+            {
+                await SubmitAsync();
+            }
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        Http.DefaultRequestHeaders.Add("X-RequestDigest", await SPTools.GetDigestAsync(Navigator.BaseUri));
+        Item data = new Item();
+        Metadata metadata = new Metadata();
+        metadata.Type = Settings.LogListType;
+        data.Metadata = metadata;
+        data.Datacenter = "Dammam";
+        if (employee)
+        {
+            data.EmployeeId = peoplePicker.empId;
+            data.VisitorType = "Employee";
+            data.PoV = formVald.PoV;
+        }
+        else
+        {
+            AttachmentUrl attach = new AttachmentUrl();
+            data.VisitorType = "Non-Employee";
+            data.FullName = form1Vald.FullName;
+            data.IdentityNumber = form1Vald.NationalID;
+            data.ContactNumber = form1Vald.ContactNumber;
+            data.WorkEmail = form1Vald.WorkEmail;
+            data.Company = form1Vald.Company;
+            data.PoV = form1Vald.PoV;
+            attach.Url = form1Vald.AttachmentURL;
+            attach.Description = fileName;
+            data.AttachmentUrl = attach;
+        }
+        data.CheckIn = DateTime.UtcNow;
+        var myContent = JsonConvert.SerializeObject(data);
+        var buffer = System.Text.Encoding.UTF8.GetBytes(myContent);
+        var byteContent = new ByteArrayContent(buffer);
+        var mediaType = new MediaTypeWithQualityHeaderValue("application/json");
+        MediaTypeWithQualityHeaderValue.TryParse("application/json;odata=verbose", out mediaType);
+        byteContent.Headers.ContentType = mediaType;
+        var response = await Http.PostAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" + Settings.LogListGuid + "')/items", byteContent);
+        if (response.StatusCode == HttpStatusCode.Created)
+        {
+            root = JsonConvert.DeserializeObject<Root>(await response.Content.ReadAsStringAsync());
+            await OnUploadAsync("file_attachments", root.Id).ConfigureAwait(true);
+            success = 1;
+            StateHasChanged();
+        }
+        else { success = 2; }
+    }
+
+    private async Task OnUploadAsync(string name, int Id)
+    {
+        Upload data = new Upload()
+        {
+            controlId = name,
+            url = Navigator.BaseUri + Settings.BaseURL,
+            listGuidMain = Settings.LogListGuid,
+            itemId = Id,
+            digest = await SPTools.GetDigestAsync(Navigator.BaseUri)
+        };
+        try
+        {
+            bool x = await jsRun.InvokeAsync<bool>("fileUpload", data);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private async Task<bool> AlreadyCheckedInNonEmpAsync(string userId)
+    {
+        string response = string.Empty;
+        string url = string.Empty;
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$filter= IdentityNumber eq '" + userId + "' and Status eq 'Checked-In'";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+        root = JsonConvert.DeserializeObject<Root>(response);
+        List<Value> values = new List<Value>();
+        values = root.value;
+        if (values != null)
+        {
+            if (values.Count > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private async Task<bool> AlreadyCheckedInEmpAsync(int userId)
+    {
+        string response = string.Empty;
+        string url = string.Empty;
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$filter= EmployeeId eq '" + userId + "' and Status eq 'Checked-In'";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+        root = JsonConvert.DeserializeObject<Root>(response);
+        List<Value> values = new List<Value>();
+        values = root.value;
+        if (values != null)
+        {
+            if (values.Count > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private async Task LauncPopupAsync()
+    {
+        bool x = await jsRun.InvokeAsync<bool>("popup");
+    }
+
+    private async Task<bool> AuthorizedAsync(string assignTo)
+    {
+        var groups = await SPTools.GetMyGroupsAsync(Navigator.BaseUri);
+        if (groups != null)
+        {
+            foreach (Group group in groups)
+            {
+                if (group.LoginName.Equals(assignTo))
+                {
+                    //authorized
+                    return true;
+                }
+            }
+            //unauthorized
+            return false;
+        }
+        else
+        {
+            //unauthorized
+            return false;
+        }
+    }
+
+    private async Task AutoFillAsync()
+    {
+        string response = string.Empty;
+        string url = string.Empty;
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$select=*,AttachmentFiles/ServerRelativeUrl,AttachmentFiles/FileName&$expand=AttachmentFiles&$filter= IdentityNumber eq '" + form1Vald.NationalID + "' and Attachments eq 1&$orderby=ID desc";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+        root = JsonConvert.DeserializeObject<Root>(response);
+        List<Value> values = new List<Value>();
+        values = root.value;
+        if (values != null && values.Count > 0)
+        {
+            Value lastValue = new Value();
+            List<AttachmentFiles> files = new List<AttachmentFiles>();
+            lastValue.AttachmentFiles = files;
+            lastValue = values[0];
+            form1Vald.FullName = lastValue.FullName;
+            form1Vald.ContactNumber = lastValue.ContactNumber;
+            form1Vald.WorkEmail = lastValue.WorkEmail;
+            form1Vald.Company = lastValue.Company;
+            form1Vald.AttachmentURL = Navigator.BaseUri + Settings.AttachmentURL + lastValue.AttachmentFiles[0].ServerRelativeUrl;
+            fileName = lastValue.AttachmentFiles[0].FileName;
+            StateHasChanged();
+        }
+        else
+        {
+            await AutoFillAsyncWithoutAttachment();
+        }
+
+    }
+
+    private async Task AutoFillAsyncWithoutAttachment()
+    {
+        string response = string.Empty;
+        string url = string.Empty;
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$filter= IdentityNumber eq '" + form1Vald.NationalID + "'&$orderby=ID desc";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+        root = JsonConvert.DeserializeObject<Root>(response);
+        List<Value> values = new List<Value>();
+        values = root.value;
+        if (values != null)
+        {
+            if (values.Count > 0)
+            {
+                form1Vald.FullName = values[0].FullName;
+                form1Vald.ContactNumber = values[0].ContactNumber;
+                form1Vald.WorkEmail = values[0].WorkEmail;
+                form1Vald.Company = values[0].Company;
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void ClearAutoFill()
+    {
+        form1Vald.FullName = string.Empty;
+        form1Vald.ContactNumber = string.Empty;
+        form1Vald.WorkEmail = string.Empty;
+        form1Vald.Company = string.Empty;
+        form1Vald.AttachmentURL = string.Empty;
+        fileName = null;
+        StateHasChanged();
+    }
+
+}

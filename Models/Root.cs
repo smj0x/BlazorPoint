@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace lms.Models
+namespace dc.Models
 {
     public class Root
     {        
@@ -15,5 +15,6 @@ namespace lms.Models
         public string FormDigestValue { get; set; }
         [JsonProperty("odata.nextLink")]
         public string OdataNextLink { get; set; }
+        public List<Group> Groups { get; set; }
     }
 }

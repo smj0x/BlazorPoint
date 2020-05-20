@@ -1,0 +1,153 @@
+﻿@page "/default.aspx/log"
+@page "/default.aspx/log/{Id:int}"
+@using Newtonsoft.Json;
+@using Models;
+@using Workers;
+@inject IJSRuntime jsRun
+
+@if (value != null)
+{
+<div class="row">
+    <div class="col-sm">
+        <p class="heading">Log: <code>#@value.Title</code></p>
+    </div>
+    <div class="col-sm text-right my-auto">
+        <img class="printbtn" src="img/printer.svg" height="24" width="24" @onclick="@(async () => await OnPrintAsync())" />
+    </div>
+</div>
+<Header SubHeading="@value.Title" Parameter="@value.Datacenter"></Header>
+<fieldset class="fieldset">
+    <legend>Visitor Details</legend>
+    <div class="form-row">
+        <div class="form-group col-lg-4 col-md-4 col-sm-12">
+            <label>Visitor Number</label>
+            <input type="text" class="form-control" value="@value.Title" readonly>
+        </div>
+        <div class="form-group col-lg-4 col-md-4 col-sm-12">
+            <label>Visitor Type</label>
+            <input type="text" class="form-control" value="@value.VisitorType" readonly>
+        </div>
+        <div class="form-group col-lg-4 col-md-4 col-sm-12">
+            @if (value.VisitorType == "Employee")
+            {<label>Visitor Employee Id</label>}
+            else
+            {<label> Visitor National Id</label>}
+            <input type="text" class="form-control" value="@value.IdentityNumber" readonly>
+        </div>
+    </div>
+    <fieldset class="fieldset">
+        <legend>Contact Details</legend>
+        <div class="form-row">
+            <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                <label>Name</label>
+                <input type="text" class="form-control" value="@value.FullName" readonly>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-lg-4 col-md-4 col-sm-12">
+                <label>Contact Number</label>
+                <input type="text" class="form-control" value="@value.ContactNumber" readonly>
+            </div>
+            <div class="form-group col-lg-4 col-md-4 col-sm-12">
+                <label>Work Email</label>
+                <input type="text" class="form-control" value="@value.WorkEmail" readonly>
+            </div>
+            <div class="form-group col-lg-4 col-md-4 col-sm-12">
+                <label>Company</label>
+                <input type="text" class="form-control" value="@value.Company" readonly>
+            </div>
+        </div>
+    </fieldset>
+    <fieldset class="fieldset">
+        <legend>Check-In And Check-Out Details</legend>
+        <div class="form-row">
+            <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                <label>Check-In DateTime</label>
+                <input type="text" class="form-control" value="@(value.CheckIn != null ? value.CheckIn?.ToLocalTime().ToString() : "")" readonly>
+            </div>
+            <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                <label>Check-Out DateTime</label>
+                <input type="text" class="form-control" value="@(value.CheckOut != null ? value.CheckOut?.ToLocalTime().ToString() : "")" readonly>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                <label>Duration</label>
+                <input type="text" class="form-control" value="@GetDuration(value.CheckIn,value.CheckOut)" readonly>
+            </div>
+            <div class="form-group col-lg-6 col-md-6 col-sm-12">
+                <label>Datacenter</label>
+                <input type="text" class="form-control" value="@value.Datacenter" readonly>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-lg-8 col-md-8 col-sm-12">
+                <label>Purpose of Visit</label>
+                <textarea cols="3" class="form-control" readonly>@value.PoV</textarea>
+            </div>
+        </div>
+
+    </fieldset>
+    @if (value.Attachments)
+    {
+        <fieldset class="fieldset">
+            <legend>Attachments</legend>
+            <table>
+                <tbody>
+                    @foreach (AttachmentFiles itemFile in value.AttachmentFiles)
+                    {
+                        <tr><td><a class="btn btn-link" href="@(Navigator.BaseUri + Settings.AttachmentURL + itemFile.ServerRelativeUrl)" target="_blank">@itemFile.FileName</a></td></tr>
+                    }
+                </tbody>
+            </table>
+        </fieldset>
+    }
+    else
+    {
+        @if (value.AttachmentUrl != null)
+        {
+            <fieldset class="fieldset">
+                <legend>Attachment By URL</legend>
+                <table>
+                    <tbody>
+                        <tr><td><a class="btn btn-link" href="@value.AttachmentUrl.Url" target="_blank">@value.AttachmentUrl.Description</a></td></tr>
+                    </tbody>
+                </table>
+            </fieldset>
+        }
+    }
+</fieldset>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private Value value;
+    //private AttachmentFiles file = new AttachmentFiles();
+    //private bool authorized = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        string response = string.Empty;
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" + Settings.LogListGuid + "')/items(" + Id + ")?$select=*,AttachmentFiles/ServerRelativeUrl,AttachmentFiles/FileName,Employee/Title,Employee/EMail,Employee/UserName,Employee/WorkPhone,Employee/Office,Employee/Department&$expand=AttachmentFiles,Employee");
+        value = new Value();
+        value.AttachmentFiles = new List<AttachmentFiles>();
+        value.AttachmentUrl = new AttachmentUrl();
+        //value.Employee = new Employee();
+        value = JsonConvert.DeserializeObject<Value>(response);
+        //if (!await AuthorizedAsync(Settings.AdminGroup))
+        //    authorized = false;
+        StateHasChanged();
+    }
+
+    private string GetDuration(DateTime? cin, DateTime?  cout) {
+        return cout.GetValueOrDefault().Subtract(cin.GetValueOrDefault()).ToString();
+    }
+
+    private async Task OnPrintAsync()
+    {
+        bool x = await jsRun.InvokeAsync<bool>("printContent");
+    }
+    }

@@ -1,30 +1,135 @@
 ﻿@page "/default.aspx"
+@using Models;
+@using Newtonsoft.Json;
+@using System.Net.Http;
 <h1 class="heading1">Home</h1>
+
 <div class="col-md-auto">
-    <div class="card-deck">
-        <div class="card border-secondary">
-            <NavLink href="default.aspx/addlicense">
-                <img src="img/form.svg" class="card-img-top" alt="form" height="200" style="background-color:#1e4691;object-fit: contain;padding:50px;max-width: 36rem;">
-                <div class="card-body">
-                    <h5 class="card-title text-center" style="color:#1e4691;">Add License</h5>
+    @if (groups != null)
+    {
+        @foreach (var group in groups)
+        {
+
+            @if (group.LoginName == Settings.RydOpGroup)
+            {
+                <div class="card-deck">
+                    <div class="card border-secondary bg-light">
+                        <NavLink href="default.aspx/ryd/check-in">
+                            <img src="img/check-in.svg" class="card-img-top" alt="form" height="200" style="object-fit: contain;padding:30px;max-width: 36rem;">
+                            <div class="card-footer">
+                                <h5 class="card-title text-center" style="color:#1e4691;">Check-In</h5>
+                                <p class="text-muted text-center">Riyadh</p>
+                            </div>
+                        </NavLink>
+                    </div>
+                    <div class="card border-secondary bg-light">
+                        <NavLink href="default.aspx/ryd/check-out">
+                            <img src="img/check-out.svg" class="card-img-top" alt="form" height="200" style="object-fit: contain;padding:30px;max-width: 36rem;">
+                            <div class="card-footer">
+                                <h5 class="card-title text-center" style="color:#1e4691;">Check-Out</h5>
+                                <p class="text-muted text-center">Riyadh</p>
+                            </div>
+                        </NavLink>
+                    </div>
+                    <div class="card border-0">
+                    </div>
                 </div>
-            </NavLink>
-        </div>
-        <div class="card border-secondary">
-            <NavLink href="default.aspx/">
-                <img src="img/form.svg" class="card-img-top" alt="form" height="200" style="background-color:#1e4691;object-fit: contain;padding:50px;max-width: 36rem;">
-                <div class="card-body">
-                    <h5 class="card-title text-center" style="color:#1e4691;">Dummy</h5>
+            }}}
+    <br />
+    @if (groups != null)
+    {
+        @foreach (var group in groups)
+        {
+
+            @if (group.LoginName == Settings.DmmOpGroup)
+            {
+                <div class="card-deck">
+                    <div class="card border-secondary bg-light">
+                        <NavLink href="default.aspx/dmm/check-in">
+                            <img src="img/check-in.svg" class="card-img-top" alt="form" height="200" style="object-fit: contain;padding:30px;max-width: 36rem;">
+                            <div class="card-footer">
+                                <h5 class="card-title text-center" style="color:#1e4691;">Check-In</h5>
+                                <p class="text-muted text-center">Dammam</p>
+                            </div>
+                        </NavLink>
+                    </div>
+                    <div class="card border-secondary bg-light">
+                        <NavLink href="default.aspx/dmm/check-out">
+                            <img src="img/check-out.svg" class="card-img-top" alt="form" height="200" style="object-fit: contain;padding:30px;max-width: 36rem;">
+                            <div class="card-footer">
+                                <h5 class="card-title text-center" style="color:#1e4691;">Check-Out</h5>
+                                <p class="text-muted text-center">Dammam</p>
+                            </div>
+                        </NavLink>
+                    </div>
+                    <div class="card border-0">
+                    </div>
                 </div>
-            </NavLink>
-        </div>
-        <div class="card border-secondary">
-            <NavLink href="default.aspx/">
-                <img src="img/form.svg" class="card-img-top" alt="form" height="200" style="background-color:#1e4691;object-fit: contain;padding:50px;max-width: 36rem;">
-                <div class="card-body">
-                    <h5 class="card-title text-center" style="color:#1e4691;">Dummy</h5>
+            }}}
+    <br />
+    @if (groups != null)
+    {
+        @foreach (var group in groups)
+        {
+
+            @if (group.LoginName == Settings.JedOpGroup)
+            {
+                <div class="card-deck">
+                    <div class="card border-secondary bg-light">
+                        <NavLink href="default.aspx/jed/check-in">
+                            <img src="img/check-in.svg" class="card-img-top" alt="form" height="200" style="object-fit: contain;padding:30px;max-width: 36rem;">
+                            <div class="card-footer">
+                                <h5 class="card-title text-center" style="color:#1e4691;">Check-In</h5>
+                                <p class="text-muted text-center">Jeddah</p>
+                            </div>
+                        </NavLink>
+                    </div>
+                    <div class="card border-secondary bg-light">
+                        <NavLink href="default.aspx/jed/check-out">
+                            <img src="img/check-out.svg" class="card-img-top" alt="form" height="200" style="object-fit: contain;padding:30px;max-width: 36rem;">
+                            <div class="card-footer">
+                                <h5 class="card-title text-center" style="color:#1e4691;">Check-Out</h5>
+                                <p class="text-muted text-center">Jeddah</p>
+                            </div>
+                        </NavLink>
+                    </div>
+                    <div class="card border-0">
+                    </div>
                 </div>
-            </NavLink>
-        </div>
-    </div>
+            }
+        }}
+    @if (groups != null)
+    {
+        @foreach (var group in groups)
+        {
+
+            @if (group.LoginName == Settings.AdminGroup)
+            {
+               <LiveStats></LiveStats>
+            }
+        }}
+
 </div>
+
+
+
+@code {
+    List<Group> groups = new List<Group>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        HttpClient Http = new HttpClient();
+        Root root = new Root();
+        root.Groups = new List<Group>();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        string temp = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/currentuser?$expand=groups");
+        root = JsonConvert.DeserializeObject<Root>(temp);
+        //Setting Global Variables
+        Settings.Id = root.Id;
+        Settings.LoginName = root.LoginName;
+        Settings.Title = root.Title;
+        Settings.Groups = root.Groups;
+        groups = root.Groups;
+        StateHasChanged();
+    }
+}

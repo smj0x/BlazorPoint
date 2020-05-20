@@ -1,0 +1,74 @@
+﻿@page "/default.aspx/about"
+@using Models;
+@using Newtonsoft.Json;
+@using System.Net.Http;
+
+    <div class="align-middle text-center">
+        <br />
+        <br />
+        <div class="col-12">
+            <img src="img/web.svg" height="96" width="96">
+            <br />
+            <p class="heading">SEC Datacenter</p>
+            <br />
+        </div>
+        <br />
+        <br />
+        @if (groupMemebers != null)
+        {
+            <p class="lead">Datacenter Visitor Log Application</p>
+            <fieldset class="fieldset">
+                <legend>Administrators</legend>
+                <div class="form-row">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                        <table id="table" class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Employee Name</th>
+                                    <th scope="col">Employee Number</th>
+                                    <th scope="col">Work Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                @if (groupMemebers.Count != 0)
+                                {
+                                    @foreach (var item in groupMemebers)
+                                    {
+                                        <tr>
+                                            <td>@item.Title</td>
+                                            <td>@item.LoginName.Split('|')[1]</td>
+                                            <td><a href="mailto:@item.Email" class="text-secondary">@item.Email</a></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </fieldset>
+        }
+    </div>
+
+@code
+{
+    private Root rootGroupMemebers = new Root();
+    private List<Value> groupMemebers = new List<Value>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGroupMembersAsync(14);
+        StateHasChanged();
+    }
+    private async Task LoadGroupMembersAsync(int Gid)
+    {
+        string response = string.Empty;
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/sitegroups/GetById('" + Gid + "')/Users");
+        rootGroupMemebers = JsonConvert.DeserializeObject<Root>(response);
+        groupMemebers = rootGroupMemebers.value;
+    }
+
+}
+

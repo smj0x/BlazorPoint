@@ -1,4 +1,4 @@
-﻿@using lms.Models;
+﻿@using Models;
 @using Newtonsoft.Json;
 @using System.Net.Http;
 
@@ -13,17 +13,20 @@
 <br />
 <br />
 <div class="col text-center">
-    <p class="h5" style="color:white">License Management System</p>
+    <p class="h4" style="color:white">Datacenter Visitor Log</p>
 </div>
 <div class="userInfo">
     <div class="userAvatar">
         <img src="img/user.png">
     </div>
     <div class="username">
-        <h3>@username</h3>
+        <p class="lead text-light">@username</p>
+        @if (groups != null && groups.Count > 0)
+        {
+            <p class="text-light"><small>@groups[0].Description</small></p>
+        }
     </div>
 </div>
-<br />
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-column">
@@ -32,19 +35,58 @@
                 <img src="img/sideMenu04.png"> &nbsp; Home
             </NavLink>
         </li>
+        @if (groups != null)
+        {
+            @foreach (var group in groups)
+            {
+                @if (group.LoginName == Settings.JedOpGroup)
+                {
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="default.aspx/jed/logs">
+                            <img src="img/sideMenu02.png"> &nbsp; Logs
+                        </NavLink>
+                    </li>
+                }
+                @if (group.LoginName == Settings.DmmOpGroup)
+                {
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="default.aspx/dmm/logs">
+                            <img src="img/sideMenu02.png"> &nbsp; Logs
+                        </NavLink>
+                    </li>
+                }
+                @if (group.LoginName == Settings.RydOpGroup)
+                {
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="default.aspx/ryd/logs">
+                            <img src="img/sideMenu02.png"> &nbsp; Logs
+                        </NavLink>
+                    </li>
+                }
+
+                @if (group.LoginName == Settings.AdminGroup)
+                {
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="default.aspx/logs">
+                            <img src="img/sideMenu02.png"> &nbsp; Logs
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="default.aspx/permissions">
+                            <img src="img/sideMenu07.png"> &nbsp; Permissions
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="../SitePages/Home.aspx" target="_blank">
+                            <img src="img/sideMenu03.png"> &nbsp; Admin Portal
+                        </NavLink>
+                    </li>
+                }
+            }
+        }
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="default.aspx/licenses">
-                <img src="img/sideMenu02.png"> &nbsp; Licenses
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="default.aspx/tasks/Not Started">
-                <img src="img/sideMenu01.png"> &nbsp; Tasks
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="../SitePages/Home.aspx" target="_blank">
-                <img src="img/sideMenu03.png"> &nbsp; Admin Portal
+            <NavLink class="nav-link" href="default.aspx/about">
+                <img src="img/sideMenu08.png"> &nbsp; About
             </NavLink>
         </li>
         <li class="nav-item px-3">
@@ -58,7 +100,7 @@
 @code {
     bool collapseNavMenu = true;
     string username = "";
-
+    List<Group> groups = new List<Group>();
     string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     void ToggleNavMenu()
@@ -70,13 +112,17 @@
     {
         HttpClient Http = new HttpClient();
         Root root = new Root();
+
+        root.Groups = new List<Group>();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        string temp = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/currentuser");
+        string temp = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/currentuser?$expand=groups");
         root = JsonConvert.DeserializeObject<Root>(temp);
         //Setting Global Variables
         Settings.Id = root.Id;
         Settings.LoginName = root.LoginName;
         Settings.Title = root.Title;
+        Settings.Groups = root.Groups;
+        groups = root.Groups;
         username = root.Title;
         StateHasChanged();
     }

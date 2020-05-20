@@ -1,0 +1,120 @@
+﻿@using Microsoft.JSInterop;
+@using Newtonsoft.Json;
+@using Models;
+@using Validations;
+@using Workers;
+@inject IJSRuntime jsRun
+
+<div class="col-lg-12">
+    @if (values != null)
+    {
+        <table id="MyLogsTable" class="table dataTable table-striped table-bordered" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Visitor Number</th>
+                    <th>Visitor Type</th>
+                    <th>Name</th>
+                    <th>Identity Number</th>
+                    <th>Company</th>
+                    <th>Datacenter</th>
+                    <th>CheckIn</th>
+                    <th>CheckOut</th>
+                    <th>Duration</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var report in values)
+                {
+                <tr>
+                    <td>@report.Id</td>
+                    <td><a href="@(Navigator.BaseUri)default.aspx/log/@report.Id">@report.Title</a></td>
+                    <td>@report.VisitorType</td>
+                    <td>@report.FullName</td>
+                    <td>@report.IdentityNumber</td>
+                    <td>@report.Company</td>
+                    <td>@report.Datacenter</td>
+                    <td>@(report.CheckIn != null ? report.CheckIn?.ToLocalTime().ToString() : "")</td>
+                    <td>@(report.CheckOut != null ? report.CheckOut?.ToLocalTime().ToString() : "")</td>
+                    <td>@(report.CheckOut.GetValueOrDefault().Subtract(report.CheckIn.GetValueOrDefault()).ToString())</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <Loading />
+    }
+    <br />
+</div>
+@code {
+    [Parameter]
+    public string Datacenter { get; set; }
+    [Parameter]
+    public Filter Filter { get; set; }
+    private Root root = new Root();
+    private List<Value> values;
+    private List<Value> _values = new List<Value>();
+    //Filter
+    string filter_response = string.Empty;
+    private HttpClient FilterHttp = new HttpClient();
+    private string filter_url;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _values.Clear();
+        values = null;
+        bool x = await jsRun.InvokeAsync<bool>("dataTableDestroy1");
+        if (Filter != null) {
+            await GetFilterReportsAsync(Filter);
+            if (Filter.ExportExcel) {
+                Export export = new Export();
+                var excelBytes = export.WriteExcel("DatacenterVisitorLog",_values);
+                await jsRun.SaveAs(excelBytes);
+            }
+        }
+        else
+            await GetMyReportsAsync(Datacenter);
+        values = new List<Value>();
+        values = _values;
+        StateHasChanged();
+        bool y = await jsRun.InvokeAsync<bool>("dataTableCreate1");
+    }
+
+    private async Task GetMyReportsAsync(string datacenter)
+    {
+        string response = string.Empty;
+        string url = string.Empty;
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        if (datacenter != null && datacenter != "")
+            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=250&$filter= Datacenter eq '" + datacenter + "' and Status eq 'Checked-Out'";
+        else
+            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=250&$filter= Status eq 'Checked-Out'";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+        root = JsonConvert.DeserializeObject<Root>(response);
+        _values = root.value;
+    }
+
+    private async Task GetFilterReportsAsync(Filter filter) {
+        if (filter.Datacenter != null && filter.Datacenter != "")
+            filter_url = Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" +  Settings.LogListGuid + "')/items?$top=5000&$filter=(Created ge datetime'"+Filter.From.ToLocalTime().ToUniversalTime().ToString("o")+"') and (Created le datetime'"+Filter.To.ToLocalTime().ToUniversalTime().ToString("o")+"') and Datacenter eq '"+Filter.Datacenter+"'and Status eq 'Checked-Out'";
+        else
+            filter_url = Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" +  Settings.LogListGuid + "')/items?$top=5000&$filter=(Created ge datetime'"+Filter.From.ToLocalTime().ToUniversalTime().ToString("o")+"') and (Created le datetime'"+Filter.To.ToLocalTime().ToUniversalTime().ToString("o")+"') and Status eq 'Checked-Out'";
+        FilterHttp.DefaultRequestHeaders.Add("Accept", "application/json");
+        await FilterHelperAsync();
+    }
+
+    private async Task FilterHelperAsync() {
+        filter_response = await FilterHttp.GetStringAsync(filter_url);
+        root = JsonConvert.DeserializeObject<Root>(filter_response);
+        _values.AddRange(root.value);
+
+        if (root.OdataNextLink != null)
+        {
+            filter_url = root.OdataNextLink;
+            await FilterHelperAsync();
+        }
+    }
+}

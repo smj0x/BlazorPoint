@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace lms.Models
+namespace dc.Models
 {
     public class Value
     {
@@ -21,41 +21,50 @@ namespace lms.Models
         public string OData__UIVersionString { get; set; }
         public bool Attachments { get; set; }
         public List<AttachmentFiles> AttachmentFiles { get; set; }
+        public AttachmentUrl AttachmentUrl { get; set; }
         public string GUID { get; set; }
-        //Tasks
-        [JsonProperty("Body")]
-        public string Body { get; set; }
-        [JsonProperty("Priority")]
-        public string Priority { get; set; }
-        [JsonProperty("Status")]
         public string Status { get; set; }
-
-        //Licenses
-        public string SystemName { get; set; }
-        public string LicenseName { get; set; }
-        public string LicenseKey { get; set; }
-        public Owner Owner { get; set; }
-        public int OwnerId { get; set; }
-        public string ContractNumber { get; set; }
+        public string Purpose { get; set; }
+        //Tasks
+        public string Body { get; set; }
+        public string Priority { get; set; }
+        public string ApproverComments { get; set; }
+        public TaskGroup TaskGroup { get; set; }
+        public AssignedTo AssignedTo { get; set; }
+        public string WorkflowOutcome { get; set; }
+        //Site Groups
+        public string LoginName { get; set; }
+        public string OwnerTitle { get; set; }
         public string Description { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public DateTime IssuedDate { get; set; }
-        public DateTime PlannedRenewal { get; set; }
-        public double Quantity { get; set; }
-        public double Utilized { get; set; }
-        public double Cost { get; set; }
-        public double TotalCost { get; set; }
-        public string TypeOfCost { get; set; }
+        //Visitor
+        public Employee Employee { get; set; }
+        public string PoV { get; set; }
+        public string IdentityNumber { get; set; }
+        public string NationalID { get; set; }
+        public string FullName { get; set; }
+        public string ContactNumber { get; set; }
+        public string WorkEmail { get; set; }
+        public string Email { get; set; }
+        public string Company { get; set; }
+        public string Datacenter { get; set; }
+        public DateTime? CheckIn { get; set; }
+        public DateTime? CheckOut { get; set; }
+        public string VisitorType { get; set; }
     }
 
     public class AttachmentFiles
     {
         public string FileName { get; set; }
         public string ServerRelativeUrl { get; set; }
+    }  
+    
+    public class AttachmentUrl
+    {
+        public string Description { get; set; }
+        public string Url { get; set; }
     }
 
-    public class Owner
+    public class Employee
     {
         public string Title { get; set; }
         public string EMail { get; set; }
@@ -64,5 +73,13 @@ namespace lms.Models
         public string Office { get; set; }
         public string Department { get; set; }
     }
+    public class AssignedTo
+    {
+        public string Title { get; set; }
+    }
 
+    public class TaskGroup
+    {
+        public string Title { get; set; }
+    }
 }

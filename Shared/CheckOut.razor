@@ -1,0 +1,150 @@
+﻿@using Microsoft.JSInterop;
+@using Newtonsoft.Json;
+@using Models;
+@using Workers;
+@using System.Net;
+@using System.Net.Http;
+@using System.Net.Http.Headers;
+@using System.Threading;
+@inject IJSRuntime jsRun
+
+<div class="col-lg-12">
+    @if (values != null)
+    {
+        <table id="MyCheckOutTable" class="table dataTable table-striped table-bordered" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Visitor Number</th>
+                    <th>Visitor Type</th>
+                    <th>Name</th>
+                    <th>Identity Number</th>
+                    <th>Company</th>
+                    <th>CheckIn</th>
+                    <th>Duration</th>
+                    <th>CheckOut</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var report in values)
+                {
+                    <tr>
+                        <td>@report.Id</td>
+                        <td><a href="@(Navigator.BaseUri)default.aspx/log/@report.Id">@report.Title</a></td>
+                        <td>@report.VisitorType</td>
+                        <td>@report.FullName</td>
+                        <td>@report.IdentityNumber</td>
+                        <td>@report.Company</td>
+                        <td>@(report.CheckIn != null ? report.CheckIn?.ToLocalTime().ToString() : "")</td>
+                        <td>@(DateTime.Now.ToLocalTime().Subtract(report.CheckIn.GetValueOrDefault().ToLocalTime()).ToString())</td>
+                        <td><button class="button orange" type="button" @onclick="async () => await CheckOutVisitor(report.Id)">Check-Out</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <Loading />
+    }
+    <br />
+</div>
+@code {
+    [Parameter]
+    public string Filter { get; set; }
+    [Parameter]
+    public string Region { get; set; }
+    private Root root = new Root();
+    private List<Value> values;
+    private List<Value> _values = new List<Value>();
+    private Employee Employee = new Employee();
+    private int count = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var timer = new Timer(new TimerCallback(_ =>
+        {
+            if (count <= 0) return;
+            count++;
+
+            // Note that the following line is necessary because otherwise
+            // Blazor would not recognize the state change and not refresh the UI
+            ReloadTableAsync().ConfigureAwait(false);
+        }), null, 5000, 5000);
+        await Task.FromResult(0);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await SetTableAsync();
+    }
+
+    private async Task SetTableAsync()
+    {
+        _values.Clear();
+        values = null;
+        bool x = await jsRun.InvokeAsync<bool>("dataTableDestroy");
+        await GetMyReportsAsync(Region);
+        values = new List<Value>();
+        values = _values;
+        StateHasChanged();
+        bool y = await jsRun.InvokeAsync<bool>("dataTableCreate");
+    }
+
+    private async Task ReloadTableAsync() {
+        _values.Clear();
+        values = null;
+        await GetMyReportsAsync(Region);
+        values = new List<Value>();
+        values = _values;
+        StateHasChanged();
+        bool y = await jsRun.InvokeAsync<bool>("dataTableReload");
+    }
+
+    private async Task GetMyReportsAsync(string _filter)
+    {
+        string response = string.Empty;
+        string url = string.Empty;
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        if (_filter != null)
+            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=5000&$filter= Datacenter eq '" + _filter + "' and Status eq 'Checked-In'";
+        else
+            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=5000&$filter= Status eq 'Checked-In'";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+        root = JsonConvert.DeserializeObject<Root>(response);
+        _values = root.value;
+    }
+
+    private async Task CheckOutVisitor(int Id)
+    {
+        HttpClient Http = new HttpClient();
+        Http.DefaultRequestHeaders.Add("Accept", "application/json");
+        Http.DefaultRequestHeaders.Add("X-RequestDigest", await SPTools.GetDigestAsync(Navigator.BaseUri));
+        Http.DefaultRequestHeaders.Add("IF-MATCH", "*");
+        Http.DefaultRequestHeaders.Add("X-HTTP-Method", "MERGE");
+        Item data = new Item();
+        Metadata metadata = new Metadata();
+        metadata.Type = Settings.LogListType;
+        data.Metadata = metadata;
+        data.CheckOut = DateTime.UtcNow;
+        data.Status = "Checked-Out";
+        var myContent = JsonConvert.SerializeObject(data);
+        var buffer = System.Text.Encoding.UTF8.GetBytes(myContent);
+        var byteContent = new ByteArrayContent(buffer);
+        var mediaType = new MediaTypeWithQualityHeaderValue("application/json");
+        MediaTypeWithQualityHeaderValue.TryParse("application/json;odata=verbose", out mediaType);
+        byteContent.Headers.ContentType = mediaType;
+        var response = await Http.PostAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" + Settings.LogListGuid + "')/items('" + Id + "')", byteContent);
+        if (response.StatusCode == HttpStatusCode.NoContent)
+        {
+            //bool x = await jsRun.InvokeAsync<bool>("alertx");
+            //Navigator.NavigateTo("default.aspx/meter/workflow/" + id);
+            Console.WriteLine("Success");
+        }
+        else
+        {
+            Console.WriteLine("Failed to Check-Out" + " : " + JsonConvert.SerializeObject(data));
+        }
+    }
+}
