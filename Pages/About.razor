@@ -65,7 +65,7 @@
         string response = string.Empty;
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/sitegroups/GetById('" + Gid + "')/Users");
+        response = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + "_api/web/sitegroups/GetById('" + Gid + "')/Users");
         rootGroupMemebers = JsonConvert.DeserializeObject<Root>(response);
         groupMemebers = rootGroupMemebers.value;
     }

@@ -164,7 +164,7 @@ else {
 
     protected override async Task OnInitializedAsync()
     {
-        if (!await AuthorizedAsync(Settings.JedOpGroup))
+        if (!await AuthorizedAsync(Configuration["JedOpGroup"]))
             authorized = false;
         else
             authorized = true;
@@ -214,10 +214,10 @@ else {
     {
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        Http.DefaultRequestHeaders.Add("X-RequestDigest", await SPTools.GetDigestAsync(Navigator.BaseUri));
+        Http.DefaultRequestHeaders.Add("X-RequestDigest", await SPTools.GetDigestAsync(Navigator.BaseUri,Configuration["BaseURL"]));
         Item data = new Item();
         Metadata metadata = new Metadata();
-        metadata.Type = Settings.LogListType;
+        metadata.Type = Configuration["LogListType"];
         data.Metadata = metadata;
         data.Datacenter = "Jeddah";
         if (employee)
@@ -247,7 +247,7 @@ else {
         var mediaType = new MediaTypeWithQualityHeaderValue("application/json");
         MediaTypeWithQualityHeaderValue.TryParse("application/json;odata=verbose", out mediaType);
         byteContent.Headers.ContentType = mediaType;
-        var response = await Http.PostAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" + Settings.LogListGuid + "')/items", byteContent);
+        var response = await Http.PostAsync(Navigator.BaseUri + Configuration["BaseURL"] + "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items", byteContent);
         if (response.StatusCode == HttpStatusCode.Created)
         {
             root = JsonConvert.DeserializeObject<Root>(await response.Content.ReadAsStringAsync());
@@ -263,10 +263,10 @@ else {
         Upload data = new Upload()
         {
             controlId = name,
-            url = Navigator.BaseUri + Settings.BaseURL,
-            listGuidMain = Settings.LogListGuid,
+            url = Navigator.BaseUri + Configuration["BaseURL"],
+            listGuidMain = Configuration["LogListGuid"],
             itemId = Id,
-            digest = await SPTools.GetDigestAsync(Navigator.BaseUri)
+            digest = await SPTools.GetDigestAsync(Navigator.BaseUri,Configuration["BaseURL"])
         };
         try
         {
@@ -284,8 +284,8 @@ else {
         string url = string.Empty;
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$filter= IdentityNumber eq '" + userId + "' and Status eq 'Checked-In'";
-        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+        url = "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items?$filter= IdentityNumber eq '" + userId + "' and Status eq 'Checked-In'";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + url);
         root = JsonConvert.DeserializeObject<Root>(response);
         List<Value> values = new List<Value>();
         values = root.value;
@@ -312,8 +312,8 @@ else {
         string url = string.Empty;
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$filter= EmployeeId eq '" + userId + "' and Status eq 'Checked-In'";
-        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+        url = "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items?$filter= EmployeeId eq '" + userId + "' and Status eq 'Checked-In'";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + url);
         root = JsonConvert.DeserializeObject<Root>(response);
         List<Value> values = new List<Value>();
         values = root.value;
@@ -341,7 +341,7 @@ else {
 
     private async Task<bool> AuthorizedAsync(string assignTo)
     {
-        var groups = await SPTools.GetMyGroupsAsync(Navigator.BaseUri);
+        var groups = await SPTools.GetMyGroupsAsync(Navigator.BaseUri,Configuration["BaseURL"]);
         if (groups != null)
         {
             foreach (Group group in groups)
@@ -367,8 +367,8 @@ else {
         string url = string.Empty;
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$select=*,AttachmentFiles/ServerRelativeUrl,AttachmentFiles/FileName&$expand=AttachmentFiles&$filter= IdentityNumber eq '" + form1Vald.NationalID + "' and Attachments eq 1&$orderby=ID desc";
-        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+        url = "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items?$select=*,AttachmentFiles/ServerRelativeUrl,AttachmentFiles/FileName&$expand=AttachmentFiles&$filter= IdentityNumber eq '" + form1Vald.NationalID + "' and Attachments eq 1&$orderby=ID desc";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + url);
         root = JsonConvert.DeserializeObject<Root>(response);
         List<Value> values = new List<Value>();
         values = root.value;
@@ -382,7 +382,7 @@ else {
             form1Vald.ContactNumber = lastValue.ContactNumber;
             form1Vald.WorkEmail = lastValue.WorkEmail;
             form1Vald.Company = lastValue.Company;
-            form1Vald.AttachmentURL = Navigator.BaseUri+Settings.AttachmentURL+lastValue.AttachmentFiles[0].ServerRelativeUrl;
+            form1Vald.AttachmentURL = Navigator.BaseUri+Configuration["AttachmentURL"]+lastValue.AttachmentFiles[0].ServerRelativeUrl;
             fileName = lastValue.AttachmentFiles[0].FileName;
             StateHasChanged();
         }
@@ -397,8 +397,8 @@ else {
         string url = string.Empty;
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$filter= IdentityNumber eq '" + form1Vald.NationalID + "'&$orderby=ID desc";
-        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+        url = "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items?$filter= IdentityNumber eq '" + form1Vald.NationalID + "'&$orderby=ID desc";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + url);
         root = JsonConvert.DeserializeObject<Root>(response);
         List<Value> values = new List<Value>();
         values = root.value;

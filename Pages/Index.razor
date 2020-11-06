@@ -10,7 +10,7 @@
         @foreach (var group in groups)
         {
 
-            @if (group.LoginName == Settings.RydOpGroup)
+            @if (group.LoginName == Configuration["RydOpGroup"])
             {
                 <div class="card-deck">
                     <div class="card border-secondary bg-light">
@@ -41,7 +41,7 @@
         @foreach (var group in groups)
         {
 
-            @if (group.LoginName == Settings.DmmOpGroup)
+            @if (group.LoginName == Configuration["DmmOpGroup"])
             {
                 <div class="card-deck">
                     <div class="card border-secondary bg-light">
@@ -72,7 +72,7 @@
         @foreach (var group in groups)
         {
 
-            @if (group.LoginName == Settings.JedOpGroup)
+            @if (group.LoginName == Configuration["JedOpGroup"])
             {
                 <div class="card-deck">
                     <div class="card border-secondary bg-light">
@@ -103,7 +103,7 @@
         @foreach (var group in groups)
         {
 
-            @if (group.LoginName == Settings.AdminGroup)
+            @if (group.LoginName == Configuration["AdminGroup"])
             {
                <LiveStats></LiveStats>
             }
@@ -122,7 +122,7 @@
         Root root = new Root();
         root.Groups = new List<Group>();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        string temp = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/currentuser?$expand=groups");
+        string temp = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + "_api/web/currentuser?$expand=groups");
         root = JsonConvert.DeserializeObject<Root>(temp);
         //Setting Global Variables
         Settings.Id = root.Id;

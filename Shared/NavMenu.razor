@@ -39,7 +39,7 @@
         {
             @foreach (var group in groups)
             {
-                @if (group.LoginName == Settings.JedOpGroup)
+                @if (group.LoginName == Configuration["JedOpGroup"])
                 {
                     <li class="nav-item px-3">
                         <NavLink class="nav-link" href="default.aspx/jed/logs">
@@ -47,7 +47,7 @@
                         </NavLink>
                     </li>
                 }
-                @if (group.LoginName == Settings.DmmOpGroup)
+                @if (group.LoginName == Configuration["DmmOpGroup"])
                 {
                     <li class="nav-item px-3">
                         <NavLink class="nav-link" href="default.aspx/dmm/logs">
@@ -55,7 +55,7 @@
                         </NavLink>
                     </li>
                 }
-                @if (group.LoginName == Settings.RydOpGroup)
+                @if (group.LoginName == Configuration["RydOpGroup"])
                 {
                     <li class="nav-item px-3">
                         <NavLink class="nav-link" href="default.aspx/ryd/logs">
@@ -64,7 +64,7 @@
                     </li>
                 }
 
-                @if (group.LoginName == Settings.AdminGroup)
+                @if (group.LoginName == Configuration["AdminGroup"])
                 {
                     <li class="nav-item px-3">
                         <NavLink class="nav-link" href="default.aspx/logs">
@@ -115,7 +115,7 @@
 
         root.Groups = new List<Group>();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        string temp = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/currentuser?$expand=groups");
+        string temp = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + "_api/web/currentuser?$expand=groups");
         root = JsonConvert.DeserializeObject<Root>(temp);
         //Setting Global Variables
         Settings.Id = root.Id;

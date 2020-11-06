@@ -45,7 +45,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        if (!await AuthorizedAsync(Settings.DmmOpGroup))
+        if (!await AuthorizedAsync(Configuration["DmmOpGroup"]))
             authorized = false;
         else
             authorized = true;
@@ -65,7 +65,7 @@ else
 
     private async Task<bool> AuthorizedAsync(string assignTo)
     {
-        var groups = await SPTools.GetMyGroupsAsync(Navigator.BaseUri);
+        var groups = await SPTools.GetMyGroupsAsync(Navigator.BaseUri,Configuration["BaseURL"]);
         if (groups != null)
         {
             foreach (Group group in groups)

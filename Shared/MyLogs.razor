@@ -89,19 +89,19 @@
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
         if (datacenter != null && datacenter != "")
-            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=250&$filter= Datacenter eq '" + datacenter + "' and Status eq 'Checked-Out'";
+            url = "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items?$orderby=ID desc&$top=250&$filter= Datacenter eq '" + datacenter + "' and Status eq 'Checked-Out'";
         else
-            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=250&$filter= Status eq 'Checked-Out'";
-        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+            url = "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items?$orderby=ID desc&$top=250&$filter= Status eq 'Checked-Out'";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + url);
         root = JsonConvert.DeserializeObject<Root>(response);
         _values = root.value;
     }
 
     private async Task GetFilterReportsAsync(Filter filter) {
         if (filter.Datacenter != null && filter.Datacenter != "")
-            filter_url = Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" +  Settings.LogListGuid + "')/items?$top=5000&$filter=(Created ge datetime'"+Filter.From.ToLocalTime().ToUniversalTime().ToString("o")+"') and (Created le datetime'"+Filter.To.ToLocalTime().ToUniversalTime().ToString("o")+"') and Datacenter eq '"+Filter.Datacenter+"'and Status eq 'Checked-Out'";
+            filter_url = Navigator.BaseUri + Configuration["BaseURL"] + "_api/web/lists(guid'" +  Configuration["LogListGuid"] + "')/items?$top=5000&$filter=(Created ge datetime'"+Filter.From.ToLocalTime().ToUniversalTime().ToString("o")+"') and (Created le datetime'"+Filter.To.ToLocalTime().ToUniversalTime().ToString("o")+"') and Datacenter eq '"+Filter.Datacenter+"'and Status eq 'Checked-Out'";
         else
-            filter_url = Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" +  Settings.LogListGuid + "')/items?$top=5000&$filter=(Created ge datetime'"+Filter.From.ToLocalTime().ToUniversalTime().ToString("o")+"') and (Created le datetime'"+Filter.To.ToLocalTime().ToUniversalTime().ToString("o")+"') and Status eq 'Checked-Out'";
+            filter_url = Navigator.BaseUri + Configuration["BaseURL"] + "_api/web/lists(guid'" +  Configuration["LogListGuid"] + "')/items?$top=5000&$filter=(Created ge datetime'"+Filter.From.ToLocalTime().ToUniversalTime().ToString("o")+"') and (Created le datetime'"+Filter.To.ToLocalTime().ToUniversalTime().ToString("o")+"') and Status eq 'Checked-Out'";
         FilterHttp.DefaultRequestHeaders.Add("Accept", "application/json");
         await FilterHelperAsync();
     }

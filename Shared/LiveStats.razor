@@ -73,10 +73,10 @@
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
         if (_filter != null)
-            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=1000&$filter= Datacenter eq '" + _filter + "' and Status eq 'Checked-In'";
+            url = "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items?$orderby=ID desc&$top=1000&$filter= Datacenter eq '" + _filter + "' and Status eq 'Checked-In'";
         else
-            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=1000&$filter= Status eq 'Checked-In'";
-        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+            url = "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items?$orderby=ID desc&$top=1000&$filter= Status eq 'Checked-In'";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + url);
         root = JsonConvert.DeserializeObject<Root>(response);
         if(_filter == "Jeddah")
             Jed = root.value.Count;

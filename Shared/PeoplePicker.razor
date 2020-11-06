@@ -28,9 +28,9 @@
         if (name != "")
         {
             HttpClient Http = new HttpClient();
-            string url = Navigator.BaseUri + Settings.BaseURL;
+            string url = Navigator.BaseUri + Configuration["BaseURL"];
             Http.DefaultRequestHeaders.Add("Accept", "application/json");
-            Http.DefaultRequestHeaders.Add("X-RequestDigest", await SPTools.GetDigestAsync(Navigator.BaseUri));
+            Http.DefaultRequestHeaders.Add("X-RequestDigest", await SPTools.GetDigestAsync(Navigator.BaseUri,Configuration["BaseURL"]));
             var response = await Http.PostAsync(url + "_api/web/ensureuser('" + name + "')", null);
             if ((int)response.StatusCode == 200)
             {

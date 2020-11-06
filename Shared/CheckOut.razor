@@ -108,10 +108,10 @@
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
         if (_filter != null)
-            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=5000&$filter= Datacenter eq '" + _filter + "' and Status eq 'Checked-In'";
+            url = "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items?$orderby=ID desc&$top=5000&$filter= Datacenter eq '" + _filter + "' and Status eq 'Checked-In'";
         else
-            url = "_api/web/lists(guid'" + Settings.LogListGuid + "')/items?$orderby=ID desc&$top=5000&$filter= Status eq 'Checked-In'";
-        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + url);
+            url = "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items?$orderby=ID desc&$top=5000&$filter= Status eq 'Checked-In'";
+        response = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + url);
         root = JsonConvert.DeserializeObject<Root>(response);
         _values = root.value;
     }
@@ -120,12 +120,12 @@
     {
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        Http.DefaultRequestHeaders.Add("X-RequestDigest", await SPTools.GetDigestAsync(Navigator.BaseUri));
+        Http.DefaultRequestHeaders.Add("X-RequestDigest", await SPTools.GetDigestAsync(Navigator.BaseUri,Configuration["BaseURL"]));
         Http.DefaultRequestHeaders.Add("IF-MATCH", "*");
         Http.DefaultRequestHeaders.Add("X-HTTP-Method", "MERGE");
         Item data = new Item();
         Metadata metadata = new Metadata();
-        metadata.Type = Settings.LogListType;
+        metadata.Type = Configuration["LogListType"];
         data.Metadata = metadata;
         data.CheckOut = DateTime.UtcNow;
         data.Status = "Checked-Out";
@@ -135,7 +135,7 @@
         var mediaType = new MediaTypeWithQualityHeaderValue("application/json");
         MediaTypeWithQualityHeaderValue.TryParse("application/json;odata=verbose", out mediaType);
         byteContent.Headers.ContentType = mediaType;
-        var response = await Http.PostAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" + Settings.LogListGuid + "')/items('" + Id + "')", byteContent);
+        var response = await Http.PostAsync(Navigator.BaseUri + Configuration["BaseURL"] + "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items('" + Id + "')", byteContent);
         if (response.StatusCode == HttpStatusCode.NoContent)
         {
             //bool x = await jsRun.InvokeAsync<bool>("alertx");

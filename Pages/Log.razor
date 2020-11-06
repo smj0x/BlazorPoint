@@ -96,7 +96,7 @@
                 <tbody>
                     @foreach (AttachmentFiles itemFile in value.AttachmentFiles)
                     {
-                        <tr><td><a class="btn btn-link" href="@(Navigator.BaseUri + Settings.AttachmentURL + itemFile.ServerRelativeUrl)" target="_blank">@itemFile.FileName</a></td></tr>
+                        <tr><td><a class="btn btn-link" href="@(Navigator.BaseUri + Configuration["AttachmentURL"] + itemFile.ServerRelativeUrl)" target="_blank">@itemFile.FileName</a></td></tr>
                     }
                 </tbody>
             </table>
@@ -131,13 +131,13 @@
         string response = string.Empty;
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/lists(guid'" + Settings.LogListGuid + "')/items(" + Id + ")?$select=*,AttachmentFiles/ServerRelativeUrl,AttachmentFiles/FileName,Employee/Title,Employee/EMail,Employee/UserName,Employee/WorkPhone,Employee/Office,Employee/Department&$expand=AttachmentFiles,Employee");
+        response = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + "_api/web/lists(guid'" + Configuration["LogListGuid"] + "')/items(" + Id + ")?$select=*,AttachmentFiles/ServerRelativeUrl,AttachmentFiles/FileName,Employee/Title,Employee/EMail,Employee/UserName,Employee/WorkPhone,Employee/Office,Employee/Department&$expand=AttachmentFiles,Employee");
         value = new Value();
         value.AttachmentFiles = new List<AttachmentFiles>();
         value.AttachmentUrl = new AttachmentUrl();
         //value.Employee = new Employee();
         value = JsonConvert.DeserializeObject<Value>(response);
-        //if (!await AuthorizedAsync(Settings.AdminGroup))
+        //if (!await AuthorizedAsync(Configuration["AdminGroup"]))
         //    authorized = false;
         StateHasChanged();
     }

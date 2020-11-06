@@ -78,11 +78,11 @@
         <legend>Add or Remove Members</legend>
         @if (success == 1)
         {
-            <AlertBar PrimaryMessage="Employee Added" Type="success"></AlertBar>
+            <AlertBar PrimaryMessage="Done" SecondaryMessage="Employee Added Successfully" Type="success"></AlertBar>
         }
         else if (success == 2)
         {
-            <AlertBar PrimaryMessage="Employee Failed to Add" Type="danger"></AlertBar>
+            <AlertBar PrimaryMessage="Failed" SecondaryMessage="Unexpected Error Occured" Type="danger"></AlertBar>
         }
         <div class="form-group col-lg-4 col-md-4 col-sm-12">
             <PeoplePicker Label="Employee No" @ref="peoplePicker" />
@@ -118,7 +118,7 @@
         string response = string.Empty;
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/sitegroups?$filter=LoginName eq '" + loginName + "'");
+        response = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + "_api/web/sitegroups?$filter=LoginName eq '" + loginName + "'");
         rootGroupInfo = JsonConvert.DeserializeObject<Root>(response);
         groupInfo = rootGroupInfo.value[0];
         if (groupInfo != null)
@@ -134,7 +134,7 @@
         string response = string.Empty;
         HttpClient Http = new HttpClient();
         Http.DefaultRequestHeaders.Add("Accept", "application/json");
-        response = await Http.GetStringAsync(Navigator.BaseUri + Settings.BaseURL + "_api/web/sitegroups/GetById('" + Gid + "')/Users");
+        response = await Http.GetStringAsync(Navigator.BaseUri + Configuration["BaseURL"] + "_api/web/sitegroups/GetById('" + Gid + "')/Users");
         rootGroupMemebers = JsonConvert.DeserializeObject<Root>(response);
         groupMemebers = rootGroupMemebers.value;
     }
@@ -155,7 +155,7 @@
             "</soap12:Envelope>";
         StringContent queryString = new StringContent(data);
         queryString.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml");
-        var response = await Http.PostAsync(Navigator.BaseUri + Settings.BaseURL + "_vti_bin/usergroup.asmx", queryString);
+        var response = await Http.PostAsync(Navigator.BaseUri + Configuration["BaseURL"] + "_vti_bin/usergroup.asmx", queryString);
         if (response.StatusCode == HttpStatusCode.OK)
         {
             success = 1;
@@ -183,7 +183,7 @@
             "</soap12:Envelope>";
         StringContent queryString = new StringContent(data);
         queryString.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml");
-        var response = await Http.PostAsync(Navigator.BaseUri + Settings.BaseURL + "_vti_bin/usergroup.asmx", queryString);
+        var response = await Http.PostAsync(Navigator.BaseUri + Configuration["BaseURL"] + "_vti_bin/usergroup.asmx", queryString);
         if (response.StatusCode == HttpStatusCode.OK)
         {
             success = 1;
@@ -198,7 +198,7 @@
 
     private async Task<bool> AuthorizedAsync(string assignTo)
     {
-        var groups = await SPTools.GetMyGroupsAsync(Navigator.BaseUri);
+        var groups = await SPTools.GetMyGroupsAsync(Navigator.BaseUri,Configuration["BaseURL"]);
         if (groups != null)
         {
             foreach (Group group in groups)
