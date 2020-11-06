@@ -1,0 +1,20 @@
+Columns
+Title  Single line of text  Required
+Employee  Person or Group  
+PoV  Multiple lines of text  
+NationalID  Single line of text  
+FullName  Single line of text  
+ContactNumber  Single line of text  
+WorkEmail  Single line of text  
+Company  Single line of text  
+Datacenter  Choice  
+CheckIn  Date and Time  
+CheckOut  Date and Time  
+VisitorType  Choice  
+Status  Choice  
+IdentityNumber  Single line of text  
+AttachmentUrl  Hyperlink or Picture  
+Modified  Date and Time  
+Created  Date and Time  
+Created By  Person or Group  
+Modified By  Person or Group
